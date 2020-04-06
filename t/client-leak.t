@@ -39,7 +39,7 @@ ok($cok, "config get");
 ok($dok, "default set");
 
 my $server = IO::Socket::INET->new(
-    LocalAddr       => "localhost",
+    LocalAddr       => "127.0.0.1",
     Proto           => "tcp",
     Listen          => 1,
 );
@@ -55,7 +55,7 @@ no_leaks_ok {
     my $sc = $config->setDefault();
     $dok = 1 if $sc eq STATUSCODE_GOOD;
     $sc = $client->connect_async(
-	"opc.tcp://localhost:$port",
+	"opc.tcp://127.0.0.1:$port",
 	sub {
 	    my ($c, $d, $i, $r) = @_;
 	},

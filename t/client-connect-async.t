@@ -88,7 +88,7 @@ $server->stop();
 # A non OPC UA server accepting TCP will do the job.
 
 my $tcp_server = IO::Socket::INET->new(
-    LocalAddr	=> "localhost",
+    LocalAddr	=> "127.0.0.1",
     Proto	=> "tcp",
     Listen	=> 1,
 );
@@ -112,7 +112,7 @@ is($client->{client}->getState(), CLIENTSTATE_DISCONNECTED,
 
 no_leaks_ok {
     $tcp_server = IO::Socket::INET->new(
-	LocalAddr	=> "localhost",
+	LocalAddr	=> "127.0.0.1",
 	LocalPort	=> $tcp_port,
 	Proto		=> "tcp",
 	Listen		=> 1,

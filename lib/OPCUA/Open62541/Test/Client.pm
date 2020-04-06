@@ -38,7 +38,7 @@ sub start {
     my OPCUA::Open62541::Test::Client $self = shift;
 
     is($self->{config}->setDefault(), "Good", "client: set default config");
-    $self->{url} = "opc.tcp://localhost";
+    $self->{url} = "opc.tcp://127.0.0.1";
     $self->{url} .= ":$self->{port}" if $self->{port};
 
     ok($self->{logger} = $self->{config}->getLogger(), "client: get logger");
