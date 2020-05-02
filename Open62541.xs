@@ -2034,6 +2034,8 @@ UA_Server_readValue(server, nodeId, outValue)
 	if (!SvOK(ST(2)) || !(SvROK(ST(2)) && SvTYPE(SvRV(ST(2))) < SVt_PVAV))
 		CROAK("outValue is not a scalar reference");
     CODE:
+	if (outValue != NULL)
+		UA_Variant_clear(outValue);
 	RETVAL = UA_Server_readValue(server->sv_server, nodeId, outValue);
 	if (outValue != NULL)
 		XS_pack_UA_Variant(SvRV(ST(2)), *outValue);
@@ -2087,6 +2089,8 @@ UA_Server_addVariableNode(server, requestedNewNodeId, parentNodeId, referenceTyp
 	void *				nodeContext
 	OPCUA_Open62541_NodeId		outNewNodeId
     CODE:
+	if (outNewNodeId != NULL)
+		UA_NodeId_clear(outNewNodeId);
 	RETVAL = UA_Server_addVariableNode(server->sv_server,
 	    requestedNewNodeId, parentNodeId, referenceTypeId, browseName,
 	    typeDefinition, attr, nodeContext, outNewNodeId);
@@ -2113,6 +2117,8 @@ UA_Server_addVariableTypeNode(server, requestedNewNodeId, parentNodeId, referenc
 	void *				nodeContext
 	OPCUA_Open62541_NodeId		outNewNodeId
     CODE:
+	if (outNewNodeId != NULL)
+		UA_NodeId_clear(outNewNodeId);
 	RETVAL = UA_Server_addVariableTypeNode(server->sv_server,
 	    requestedNewNodeId, parentNodeId, referenceTypeId, browseName,
 	    typeDefinition, attr, nodeContext, outNewNodeId);
@@ -2139,6 +2145,8 @@ UA_Server_addObjectNode(server, requestedNewNodeId, parentNodeId, referenceTypeI
 	void *				nodeContext
 	OPCUA_Open62541_NodeId		outNewNodeId
     CODE:
+	if (outNewNodeId != NULL)
+		UA_NodeId_clear(outNewNodeId);
 	RETVAL = UA_Server_addObjectNode(server->sv_server,
 	    requestedNewNodeId, parentNodeId, referenceTypeId, browseName,
 	    typeDefinition, attr, nodeContext, outNewNodeId);
@@ -2164,6 +2172,8 @@ UA_Server_addObjectTypeNode(server, requestedNewNodeId, parentNodeId, referenceT
 	void *				nodeContext
 	OPCUA_Open62541_NodeId		outNewNodeId
     CODE:
+	if (outNewNodeId != NULL)
+		UA_NodeId_clear(outNewNodeId);
 	RETVAL = UA_Server_addObjectTypeNode(server->sv_server,
 	    requestedNewNodeId, parentNodeId, referenceTypeId, browseName,
 	    attr, nodeContext, outNewNodeId);
@@ -2188,6 +2198,8 @@ UA_Server_addViewNode(server, requestedNewNodeId, parentNodeId, referenceTypeId,
 	void *				nodeContext
 	OPCUA_Open62541_NodeId		outNewNodeId
     CODE:
+	if (outNewNodeId != NULL)
+		UA_NodeId_clear(outNewNodeId);
 	RETVAL = UA_Server_addViewNode(server->sv_server,
 	    requestedNewNodeId, parentNodeId, referenceTypeId, browseName,
 	    attr, nodeContext, outNewNodeId);
@@ -2212,6 +2224,8 @@ UA_Server_addReferenceTypeNode(server, requestedNewNodeId, parentNodeId, referen
 	void *				nodeContext
 	OPCUA_Open62541_NodeId		outNewNodeId
     CODE:
+	if (outNewNodeId != NULL)
+		UA_NodeId_clear(outNewNodeId);
 	RETVAL = UA_Server_addReferenceTypeNode(server->sv_server,
 	    requestedNewNodeId, parentNodeId, referenceTypeId, browseName,
 	    attr, nodeContext, outNewNodeId);
@@ -2236,6 +2250,8 @@ UA_Server_addDataTypeNode(server, requestedNewNodeId, parentNodeId, referenceTyp
 	void *				nodeContext
 	OPCUA_Open62541_NodeId		outNewNodeId
     CODE:
+	if (outNewNodeId != NULL)
+		UA_NodeId_clear(outNewNodeId);
 	RETVAL = UA_Server_addDataTypeNode(server->sv_server,
 	    requestedNewNodeId, parentNodeId, referenceTypeId, browseName,
 	    attr, nodeContext, outNewNodeId);
@@ -2624,6 +2640,8 @@ UA_Client_readDisplayNameAttribute(client, nodeId, outDisplayName)
 	if (!SvOK(ST(2)) || !(SvROK(ST(2)) && SvTYPE(SvRV(ST(2))) < SVt_PVAV))
 		CROAK("outDisplayName is not a scalar reference");
     CODE:
+	if (outDisplayName != NULL)
+		UA_LocalizedText_clear(outDisplayName);
 	RETVAL = UA_Client_readDisplayNameAttribute(client->cl_client, nodeId,
 	    outDisplayName);
 	if (outDisplayName != NULL)
@@ -2643,6 +2661,8 @@ UA_Client_readDescriptionAttribute(client, nodeId, outDescription)
 	if (!SvOK(ST(2)) || !(SvROK(ST(2)) && SvTYPE(SvRV(ST(2))) < SVt_PVAV))
 		CROAK("outDescription is not a scalar reference");
     CODE:
+	if (outDescription != NULL)
+		UA_LocalizedText_clear(outDescription);
 	RETVAL = UA_Client_readDescriptionAttribute(client->cl_client, nodeId,
 	    outDescription);
 	if (outDescription != NULL)
@@ -2662,6 +2682,8 @@ UA_Client_readValueAttribute(client, nodeId, outValue)
 	if (!SvOK(ST(2)) || !(SvROK(ST(2)) && SvTYPE(SvRV(ST(2))) < SVt_PVAV))
 		CROAK("outValue is not a scalar reference");
     CODE:
+	if (outValue != NULL)
+		UA_Variant_clear(outValue);
 	RETVAL = UA_Client_readValueAttribute(client->cl_client, nodeId,
 	    outValue);
 	if (outValue != NULL)
@@ -2684,6 +2706,7 @@ UA_Client_readDataTypeAttribute(client, nodeId, outDataType)
 	if (!SvOK(ST(2)) || !(SvROK(ST(2)) && SvTYPE(SvRV(ST(2))) < SVt_PVAV))
 		CROAK("outDataType is not a scalar reference");
     CODE:
+	UA_NodeId_clear(&outNodeId);
 	RETVAL = UA_Client_readDataTypeAttribute(client->cl_client, nodeId,
 	    &outNodeId);
 	/*
