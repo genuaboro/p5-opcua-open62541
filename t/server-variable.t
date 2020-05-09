@@ -70,7 +70,7 @@ my $outNewNodeId;
 is($server->{server}->addVariableNode(\%requestedNewNodeId, \%parentNodeId,
     \%referenceTypeId, \%browseName, \%typeDefinition, \%attr, 0,
     \$outNewNodeId), STATUSCODE_GOOD, "add variable out");
-is(ref($outNewNodeId), 'OPCUA::Open62541::NodeId', "class out node");
+is(ref($outNewNodeId), 'HASH', "class out node");
 no_leaks_ok {
     $server->{server}->addVariableNode(\%requestedNewNodeId, \%parentNodeId,
 	\%referenceTypeId, \%browseName, \%typeDefinition, \%attr, 0,

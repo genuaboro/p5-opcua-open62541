@@ -2086,10 +2086,15 @@ UA_Server_addVariableNode(server, requestedNewNodeId, parentNodeId, referenceTyp
 	UA_VariableAttributes		attr
 	void *				nodeContext
 	OPCUA_Open62541_NodeId		outNewNodeId
+    INIT:
+	if (SvOK(ST(8)) && !(SvROK(ST(8)) && SvTYPE(SvRV(ST(8))) < SVt_PVAV))
+		CROAK("outNewNodeId is not a scalar reference");
     CODE:
 	RETVAL = UA_Server_addVariableNode(server->sv_server,
 	    requestedNewNodeId, parentNodeId, referenceTypeId, browseName,
 	    typeDefinition, attr, nodeContext, outNewNodeId);
+	if (outNewNodeId != NULL)
+		XS_pack_UA_NodeId(SvRV(ST(8)), *outNewNodeId);
     OUTPUT:
 	RETVAL
     CLEANUP:
