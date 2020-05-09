@@ -5,7 +5,7 @@ use warnings;
 use OPCUA::Open62541 qw(:STATUSCODE :TYPES);
 
 use OPCUA::Open62541::Test::Server;
-use Test::More tests => OPCUA::Open62541::Test::Server::planning_nofork() + 103;
+use Test::More tests => OPCUA::Open62541::Test::Server::planning_nofork() + 107;
 use Test::Exception;
 use Test::LeakTrace;
 use Test::NoWarnings;
@@ -363,3 +363,11 @@ throws_ok { $server->{server}->addVariableNode(@addargs, $client) }
 no_leaks_ok { eval { $server->{server}->addVariableNode(@addargs, $client) } }
     "add node client type leak";
 is(ref($client), 'OPCUA::Open62541::Client', "read client ref");
+
+ok($outnodeid = OPCUA::Open62541::NodeId->new(), "nodeid new");
+throws_ok { $server->{server}->addVariableNode(@addargs, $outnodeid) }
+    (qr/addVariableNode: Parameter outNewNodeId is not a scalar reference /,
+    "add node nodeid");
+is(ref($outnodeid), 'OPCUA::Open62541::NodeId', "node nodeid ref");
+no_leaks_ok { $server->{server}->addVariableNode(@addargs, \$outnodeid) }
+    "add node nodeid leak";

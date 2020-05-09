@@ -107,6 +107,8 @@ T_PTROBJ_SPECIAL
 
 #############################################################################
 OUTPUT
+T_PTROBJ_OPTIONAL
+	sv_setref_pv($arg, \"${(my $ntt=${ntype})=~s/_/::/g;\$ntt}\", $var);
 T_PTROBJ_REFERENCE
 	sv_setref_pv($arg, \"${(my $ntt=${ntype})=~s/_/::/g;\$ntt}\", $var);
 T_PTROBJ_SPECIAL
