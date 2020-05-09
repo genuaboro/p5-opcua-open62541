@@ -1764,6 +1764,20 @@ MODULE = OPCUA::Open62541	PACKAGE = OPCUA::Open62541::NodeId	PREFIX = UA_NodeId_
 # 6.1.18 NodeId, types_generated_handling.h
 # pointer needed for optional function arguments
 
+OPCUA_Open62541_NodeId
+UA_NodeId_new(class)
+	char *				class
+    INIT:
+	if (strcmp(class, "OPCUA::Open62541::NodeId") != 0)
+		CROAK("Class '%s' is not OPCUA::Open62541::NodeId", class);
+    CODE:
+	RETVAL = UA_NodeId_new();
+	if (RETVAL == NULL)
+		CROAKE("UA_NodeId_new");
+	DPRINTF("nodeid %p", RETVAL);
+    OUTPUT:
+	RETVAL
+
 void
 UA_NodeId_DESTROY(nodeid)
 	OPCUA_Open62541_NodeId		nodeid
