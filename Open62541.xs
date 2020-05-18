@@ -829,6 +829,8 @@ OPCUA_Open62541_Variant_setArray(OPCUA_Open62541_Variant variant, SV *in,
 	if (array == NULL)
 		CROAKE("UA_Array_new size %zd, type '%s' index %u",
 		    top + 1, type->typeName, type->typeIndex);
+	UA_Variant_setArray(variant, array, top + 1, type);
+
 	p = array;
 	for (i = 0; i <= top; i++) {
 		svp = av_fetch(av, i, 0);
@@ -837,8 +839,6 @@ OPCUA_Open62541_Variant_setArray(OPCUA_Open62541_Variant variant, SV *in,
 		}
 		p += type->memSize;
 	}
-
-	UA_Variant_setArray(variant, array, top + 1, type);
 }
 
 static UA_Variant
