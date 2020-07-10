@@ -64,5 +64,7 @@ severity = 2
 [Variables::ProhibitConditionalDeclarations]
 [Variables::RequireLocalizedPunctuationVars]
 severity = 2
+[ValuesAndExpressions::ProhibitConstantPragma]
+severity = 2
 
 #[Modules::ProhibitExcessMainComplexity]

@@ -17,18 +17,17 @@ close($fh);
 # type, prefix, header of generated Perl constants
 my @consts = (
   # constants used in define and enum tests
-  [qw(	enum	ATTRIBUTEID		constants	)],
-  [qw(	define	ACCESSLEVELMASK		constants	)],
-  [qw(	define	WRITEMASK		constants	)],
-  [qw(	define	VALUERANK		constants	)],
-  [qw(	enum	RULEHANDLING		constants	)],
-  [qw(	enum	ORDER			constants	)],
+  [qw(	enum	ATTRIBUTEID		common		)],
+  [qw(	define	ACCESSLEVELMASK		common		)],
+  [qw(	define	WRITEMASK		common		)],
+  [qw(	define	VALUERANK		common		)],
+  [qw(	enum	RULEHANDLING		common		)],
+  [qw(	enum	ORDER			common		)],
   [qw(	enum	VARIANT			types		)],
   # We need UA_StatusCode as C type to run special typemap conversion.
   [qw(	define	STATUSCODE		statuscodes	UA_StatusCode	)],
   # needed for functionality tests
   [qw(	enum	BROWSERESULTMASK	types_generated	)],
-  [qw(	enum	CLIENTSTATE		client_config	)],
   [qw(	enum	NODEIDTYPE		types		)],
   # Type numbers depend on open62541 compile time options.  We cannot
   # put them into Contant.pm as this file is commited into the source
@@ -115,7 +114,8 @@ sub parse_prefix {
 	my $value = $typedef ? "" : " $num";
 	print $pmf "$prefix $str$value\n";
 	print $podf "=item ${prefix}_${str}\n\n";
-	print_xsfunc($xsf, $typedef, $prefix, $str) if $typedef;
+	print_xsfunc($xsf, $typedef, $prefix, $str, $type eq "define")
+	    if $typedef;
 	push @allstr, $str;
 	$prevnum = $num;
     }
@@ -266,7 +266,8 @@ EOPODFOOTER
 
 ########################################################################
 sub print_xsfunc {
-    my ($xsf, $typedef, $prefix, $str) = @_;
+    my ($xsf, $typedef, $prefix, $str, $ifdef) = @_;
+    print $xsf "#ifdef UA_${prefix}_${str}\n\n" if $ifdef;
     print $xsf <<"EOXSFUNC";
 ${typedef}
 ${prefix}_${str}()
@@ -276,4 +277,5 @@ ${prefix}_${str}()
 	RETVAL
 
 EOXSFUNC
+    print $xsf "#endif\n" if $ifdef;
 }
