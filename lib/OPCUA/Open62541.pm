@@ -16,6 +16,29 @@ $EXPORT_TAGS{all} = [@OPCUA::Open62541::Constant::EXPORT_OK];
 require XSLoader;
 XSLoader::load('OPCUA::Open62541', $VERSION);
 
+# These are from 1.0 API, but removed in 1.1, needed for comaptibility.
+use constant CLIENTSTATE_DISCONNECTED		=> 0;
+use constant CLIENTSTATE_WAITING_FOR_ACK	=> 1;
+use constant CLIENTSTATE_CONNECTED		=> 2;
+use constant CLIENTSTATE_SECURECHANNEL		=> 3;
+use constant CLIENTSTATE_SESSION		=> 4;
+use constant CLIENTSTATE_SESSION_DISCONNECTED	=> 5;
+use constant CLIENTSTATE_SESSION_RENEWED	=> 6;
+
+my @clientstates = qw(
+    CLIENTSTATE_DISCONNECTED
+    CLIENTSTATE_WAITING_FOR_ACK
+    CLIENTSTATE_CONNECTED
+    CLIENTSTATE_SECURECHANNEL
+    CLIENTSTATE_SESSION
+    CLIENTSTATE_SESSION_DISCONNECTE
+    CLIENTSTATE_SESSION_RENEWED
+);
+
+push @EXPORT_OK, @clientstates;
+$EXPORT_TAGS{CLIENTSTATE} = \@clientstates;
+push @{$EXPORT_TAGS{all}}, @clientstates;
+
 1;
 
 __END__
