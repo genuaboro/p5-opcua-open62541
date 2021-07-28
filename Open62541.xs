@@ -44,12 +44,6 @@ static void croak_status(const char *, UA_StatusCode, char *, ...)
     __attribute__noreturn__
     __attribute__format__null_ok__(__printf__,3,4);
 
-#define OPEN62541_PERLCB_CLIENTDELETESUBSCRIPTION 0
-#define OPEN62541_PERLCB_CLIENTSTATUSCHANGENOTIFICATION 1
-
-#define OPEN62541_PERLCB_CLIENTDELETEMONITOREDITEM 0
-#define OPEN62541_PERLCB_CLIENTDATACHANGENOTIFICATION 1
-
 static void
 croak_func(const char *func, char *pat, ...)
 {
@@ -2029,6 +2023,9 @@ clientAsyncReadCallback(UA_Client *client, void *userdata,
 	clientCallbackPerl(client, userdata, requestId, sv);
 }
 
+#define PERLCB_DELETE 0
+#define PERLCB_CHANGE 1
+
 static void
 clientDeleteSubscriptionCallback(UA_Client *client, UA_UInt32 subId,
     void *subContext)
@@ -2036,31 +2033,33 @@ clientDeleteSubscriptionCallback(UA_Client *client, UA_UInt32 subId,
 	dTHX;
 	dSP;
 	ClientCallbackData* ccds = (ClientCallbackData*)subContext;
-	ClientCallbackData ccd = ccds[OPEN62541_PERLCB_CLIENTDELETESUBSCRIPTION];
+	ClientCallbackData ccd_change = ccds[PERLCB_CHANGE];
+	ClientCallbackData ccd_delete = ccds[PERLCB_DELETE];
 
-	DPRINTF("client %p, ccd %p", client, ccd);
+	DPRINTF("client %p, ccd_change %p, ccd_delete %p",
+	    client, ccd_change, ccd_delete);
 
-	if (ccd) {
+	if (ccd_delete) {
 		ENTER;
 		SAVETMPS;
 
 		PUSHMARK(SP);
 		EXTEND(SP, 3);
-		PUSHs(ccd->ccd_client);
+		PUSHs(ccd_delete->ccd_client);
 		mPUSHu(subId);
-		PUSHs(ccd->ccd_data);
+		PUSHs(ccd_delete->ccd_data);
 		PUTBACK;
 
-		call_sv(ccd->ccd_callback, G_VOID | G_DISCARD);
+		call_sv(ccd_delete->ccd_callback, G_VOID | G_DISCARD);
 
 		FREETMPS;
 		LEAVE;
 
-		deleteClientCallbackData(ccd);
+		deleteClientCallbackData(ccd_delete);
 	}
 
-	if (ccds[OPEN62541_PERLCB_CLIENTSTATUSCHANGENOTIFICATION])
-		deleteClientCallbackData(ccds[OPEN62541_PERLCB_CLIENTSTATUSCHANGENOTIFICATION]);
+	if (ccd_change)
+		deleteClientCallbackData(ccd_change);
 	free(ccds);
 }
 
@@ -2071,12 +2070,12 @@ clientStatusChangeNotificationCallback(UA_Client *client, UA_UInt32 subId,
 	dTHX;
 	dSP;
 	ClientCallbackData* ccds = (ClientCallbackData*)subContext;
-	ClientCallbackData ccd = ccds[OPEN62541_PERLCB_CLIENTSTATUSCHANGENOTIFICATION];
+	ClientCallbackData ccd_change = ccds[PERLCB_CHANGE];
 	SV *notificationPerl;
 
-	DPRINTF("client %p, ccd %p", client, ccd);
+	DPRINTF("client %p, ccd_change %p", client, ccd_change);
 
-	if (!ccd)
+	if (ccd_change == NULL)
 		return;
 
 	notificationPerl = newSV(0);
@@ -2089,13 +2088,13 @@ clientStatusChangeNotificationCallback(UA_Client *client, UA_UInt32 subId,
 
 	PUSHMARK(SP);
 	EXTEND(SP, 4);
-	PUSHs(ccd->ccd_client);
+	PUSHs(ccd_change->ccd_client);
 	mPUSHu(subId);
-	PUSHs(ccd->ccd_data);
+	PUSHs(ccd_change->ccd_data);
 	mPUSHs(notificationPerl);
 	PUTBACK;
 
-	call_sv(ccd->ccd_callback, G_VOID | G_DISCARD);
+	call_sv(ccd_change->ccd_callback, G_VOID | G_DISCARD);
 
 	FREETMPS;
 	LEAVE;
@@ -2108,27 +2107,22 @@ clientDeleteMonitoredItemCallback(UA_Client *client, UA_UInt32 subId,
 	dTHX;
 	dSP;
 	ClientCallbackData *ccds_mon = (ClientCallbackData*)monContext;
-	ClientCallbackData  ccd_mon  = ccds_mon[OPEN62541_PERLCB_CLIENTDELETEMONITOREDITEM];
-	ClientCallbackData *ccds_sub = NULL;
-	ClientCallbackData  ccd_sub  = NULL;
+	ClientCallbackData  ccd_mon_change  = ccds_mon[PERLCB_CHANGE];
+	ClientCallbackData  ccd_mon_delete  = ccds_mon[PERLCB_DELETE];
+	ClientCallbackData *ccds_sub = (ClientCallbackData*)subContext;
+	ClientCallbackData  ccd_sub_delete  = NULL;
 	SV *subContextPerl;
 
-	DPRINTF("client %p, ccd %p", client, ccd_mon);
+	if (subContext)
+		ccd_sub_delete = ccds_sub[PERLCB_DELETE];
 
-	if (ccd_mon) {
-		/* subContext can be NULL if the request failed */
-		if (subContext) {
-			/* get the subscription perl context variable (if available) */
-			ccds_sub = (ClientCallbackData*)subContext;
-			if (ccds_sub[OPEN62541_PERLCB_CLIENTDELETESUBSCRIPTION]) {
-				ccd_sub = ccds_sub[OPEN62541_PERLCB_CLIENTDELETESUBSCRIPTION];
-				subContextPerl = (SV*) ccd_sub->ccd_data;
-			} else if (ccds_sub[OPEN62541_PERLCB_CLIENTSTATUSCHANGENOTIFICATION]) {
-				ccd_sub = ccds_sub[OPEN62541_PERLCB_CLIENTSTATUSCHANGENOTIFICATION];
-				subContextPerl = (SV*) ccd_sub->ccd_data;
-			} else {
-				subContextPerl = newSV(0);
-			}
+	DPRINTF("client %p, ccd_mon_change %p, ccd_mon_delete %p, "
+	    "ccd_sub_delete %p",
+	    client, ccd_mon_change, ccd_mon_delete, ccd_sub_delete);
+
+	if (ccd_mon_delete) {
+		if (ccd_sub_delete) {
+			subContextPerl = (SV*)ccd_sub_delete->ccd_data;
 		} else {
 			subContextPerl = newSV(0);
 		}
@@ -2138,23 +2132,23 @@ clientDeleteMonitoredItemCallback(UA_Client *client, UA_UInt32 subId,
 
 		PUSHMARK(SP);
 		EXTEND(SP, 5);
-		PUSHs(ccd_mon->ccd_client);
+		PUSHs(ccd_mon_delete->ccd_client);
 		mPUSHu(subId);
 		mPUSHs(subContextPerl);
 		mPUSHu(monId);
-		PUSHs(ccd_mon->ccd_data);
+		PUSHs(ccd_mon_delete->ccd_data);
 		PUTBACK;
 
-		call_sv(ccd_mon->ccd_callback, G_VOID | G_DISCARD);
+		call_sv(ccd_mon_delete->ccd_callback, G_VOID | G_DISCARD);
 
 		FREETMPS;
 		LEAVE;
 
-		deleteClientCallbackData(ccd_mon);
+		deleteClientCallbackData(ccd_mon_delete);
 	}
 
-	if (ccds_mon[OPEN62541_PERLCB_CLIENTDATACHANGENOTIFICATION])
-		deleteClientCallbackData(ccds_mon[OPEN62541_PERLCB_CLIENTDATACHANGENOTIFICATION]);
+	if (ccd_mon_change)
+		deleteClientCallbackData(ccd_mon_change);
 	free(ccds_mon);
 }
 
@@ -2165,25 +2159,24 @@ clientDataChangeNotificationCallback(UA_Client *client, UA_UInt32 subId,
 	dTHX;
 	dSP;
 	ClientCallbackData *ccds_mon = (ClientCallbackData*)monContext;
-	ClientCallbackData  ccd_mon  = ccds_mon[OPEN62541_PERLCB_CLIENTDATACHANGENOTIFICATION];
-	ClientCallbackData *ccds_sub = NULL;
-	ClientCallbackData  ccd_sub  = NULL;
+	ClientCallbackData  ccd_mon_change  = ccds_mon[PERLCB_CHANGE];
+	ClientCallbackData *ccds_sub = (ClientCallbackData*)subContext;
+	ClientCallbackData  ccd_sub_change  = NULL;
 	SV *subContextPerl;
 	SV *valuePerl;
 
-	DPRINTF("client %p, ccd %p", client, ccd_mon);
+	if (ccds_sub)
+		ccd_sub_change = ccds_sub[PERLCB_CHANGE];
 
-	if (!ccd_mon)
+	DPRINTF("client %p, ccd_mon_change %p, ccd_sub_change %p",
+	    client, ccd_mon_change, ccd_sub_change);
+
+	if (ccd_mon_change == NULL)
 		return;
 
 	/* get the subscription perl context variable (if available) */
-	ccds_sub = (ClientCallbackData*)subContext;
-	if (ccds_sub[OPEN62541_PERLCB_CLIENTDELETESUBSCRIPTION]) {
-		ccd_sub = ccds_sub[OPEN62541_PERLCB_CLIENTDELETESUBSCRIPTION];
-		subContextPerl = (SV*) ccd_sub->ccd_data;
-	} else if (ccds_sub[OPEN62541_PERLCB_CLIENTSTATUSCHANGENOTIFICATION]) {
-		ccd_sub = ccds_sub[OPEN62541_PERLCB_CLIENTSTATUSCHANGENOTIFICATION];
-		subContextPerl = (SV*) ccd_sub->ccd_data;
+	if (ccd_sub_change) {
+		subContextPerl = (SV*)ccd_sub_change->ccd_data;
 	} else {
 		subContextPerl = newSV(0);
 	}
@@ -2197,15 +2190,15 @@ clientDataChangeNotificationCallback(UA_Client *client, UA_UInt32 subId,
 
 	PUSHMARK(SP);
 	EXTEND(SP, 6);
-	PUSHs(ccd_mon->ccd_client);
+	PUSHs(ccd_mon_change->ccd_client);
 	mPUSHu(subId);
 	mPUSHs(subContextPerl);
 	mPUSHu(monId);
-	PUSHs(ccd_mon->ccd_data);
+	PUSHs(ccd_mon_change->ccd_data);
 	mPUSHs(valuePerl);
 	PUTBACK;
 
-	call_sv(ccd_mon->ccd_callback, G_VOID | G_DISCARD);
+	call_sv(ccd_mon_change->ccd_callback, G_VOID | G_DISCARD);
 
 	FREETMPS;
 	LEAVE;
@@ -4184,21 +4177,22 @@ UA_Client_Subscriptions_create(client, request, subscriptionContext, statusChang
 		CROAKE("calloc");
 
 	if (SvOK(statusChangeCallback))
-		ccds[OPEN62541_PERLCB_CLIENTSTATUSCHANGENOTIFICATION] =
-		    newClientCallbackData(statusChangeCallback, ST(0), subscriptionContext);
+		ccds[PERLCB_CHANGE] = newClientCallbackData(
+		    statusChangeCallback, ST(0), subscriptionContext);
 
 	if (SvOK(deleteCallback))
-		ccds[OPEN62541_PERLCB_CLIENTDELETESUBSCRIPTION] =
-		    newClientCallbackData(deleteCallback, ST(0), subscriptionContext);
+		ccds[PERLCB_DELETE] = newClientCallbackData(
+		    deleteCallback, ST(0), subscriptionContext);
 
 	RETVAL = UA_Client_Subscriptions_create(client->cl_client, *request,
-	    ccds, clientStatusChangeNotificationCallback, clientDeleteSubscriptionCallback);
+	    ccds, clientStatusChangeNotificationCallback,
+	    clientDeleteSubscriptionCallback);
 
 	if (RETVAL.responseHeader.serviceResult != UA_STATUSCODE_GOOD) {
-		if (ccds[OPEN62541_PERLCB_CLIENTDELETESUBSCRIPTION])
-			deleteClientCallbackData(ccds[OPEN62541_PERLCB_CLIENTDELETESUBSCRIPTION]);
-		if (ccds[OPEN62541_PERLCB_CLIENTSTATUSCHANGENOTIFICATION])
-			deleteClientCallbackData(ccds[OPEN62541_PERLCB_CLIENTSTATUSCHANGENOTIFICATION]);
+		if (ccds[PERLCB_DELETE])
+			deleteClientCallbackData(ccds[PERLCB_DELETE]);
+		if (ccds[PERLCB_CHANGE])
+			deleteClientCallbackData(ccds[PERLCB_CHANGE]);
 		free(ccds);
 	}
     OUTPUT:
@@ -4387,16 +4381,17 @@ UA_Client_MonitoredItems_createDataChange(client, subscriptionId, timestampsToRe
 		CROAKE("calloc");
 
 	if (SvOK(callback))
-		ccds[OPEN62541_PERLCB_CLIENTDATACHANGENOTIFICATION] =
-		    newClientCallbackData(callback, ST(0), context);
+		ccds[PERLCB_CHANGE] = newClientCallbackData(
+		    callback, ST(0), context);
 
 	if (SvOK(deleteCallback))
-		ccds[OPEN62541_PERLCB_CLIENTDELETEMONITOREDITEM] =
-		    newClientCallbackData(deleteCallback, ST(0), context);
+		ccds[PERLCB_DELETE] = newClientCallbackData(
+		    deleteCallback, ST(0), context);
 
 	RETVAL = UA_Client_MonitoredItems_createDataChange(client->cl_client,
 	    subscriptionId, timestampsToReturn, *item, ccds,
-	    clientDataChangeNotificationCallback, clientDeleteMonitoredItemCallback);
+	    clientDataChangeNotificationCallback,
+	    clientDeleteMonitoredItemCallback);
     OUTPUT:
 	RETVAL
 
