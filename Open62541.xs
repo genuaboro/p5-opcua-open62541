@@ -4344,11 +4344,11 @@ UA_Client_MonitoredItems_createDataChanges(client, request, contextsSV, callback
 			deleteCallbackSV = NULL;
 
 		if (callbackSV != NULL && SvOK(*callbackSV))
-			ccds[i][OPEN62541_PERLCB_CLIENTDATACHANGENOTIFICATION] =
+			ccds[i][PERLCB_CHANGE] =
 			    newClientCallbackData(*callbackSV, ST(0), *contextSV);
 
 		if (deleteCallbackSV != NULL && SvOK(*deleteCallbackSV))
-			ccds[i][OPEN62541_PERLCB_CLIENTDELETEMONITOREDITEM] =
+			ccds[i][PERLCB_DELETE] =
 			    newClientCallbackData(*deleteCallbackSV, ST(0), *contextSV);
 
 		callbacks[i] = clientDataChangeNotificationCallback;
