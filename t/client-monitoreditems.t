@@ -256,7 +256,7 @@ no_leaks_ok {
 	$request,
 	undef,
 	undef,
-	undef,
+	sub {},
     );
     # iterate until all delete callbacks have been called
     $client->iterate(sub {sleep 1; ++$i > 10 &&
