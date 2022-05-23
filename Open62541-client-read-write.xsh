@@ -560,26 +560,6 @@ UA_Client_writeNodeIdAttribute(client, nodeId, newNodeId)
 	RETVAL
 
 UA_StatusCode
-UA_Client_readNodeIdAttribute_async(client, nodeId, callback, data, outoptReqId)
-	OPCUA_Open62541_Client		client
-	OPCUA_Open62541_NodeId		nodeId
-	SV *				callback
-	SV *				data
-	OPCUA_Open62541_UInt32		outoptReqId
-    PREINIT:
-	ClientCallbackData		ccd;
-    CODE:
-	ccd = newClientCallbackData(callback, ST(0), data);
-	RETVAL = UA_Client_readNodeIdAttribute_async(client->cl_client,
-	    *nodeId, clientAsyncReadNodeIdCallback, ccd, outoptReqId);
-	if (RETVAL != UA_STATUSCODE_GOOD)
-		deleteClientCallbackData(ccd);
-	if (outoptReqId != NULL)
-		XS_pack_UA_UInt32(SvRV(ST(4)), *outoptReqId);
-    OUTPUT:
-	RETVAL
-
-UA_StatusCode
 UA_Client_readSymmetricAttribute(client, nodeId, outBoolean)
 	OPCUA_Open62541_Client		client
 	OPCUA_Open62541_NodeId		nodeId
@@ -752,6 +732,26 @@ UA_Client_readUserWriteMaskAttribute_async(client, nodeId, callback, data, outop
 	RETVAL
 
 UA_StatusCode
+UA_Client_readValueAttribute_async(client, nodeId, callback, data, outoptReqId)
+	OPCUA_Open62541_Client		client
+	OPCUA_Open62541_NodeId		nodeId
+	SV *				callback
+	SV *				data
+	OPCUA_Open62541_UInt32		outoptReqId
+    PREINIT:
+	ClientCallbackData		ccd;
+    CODE:
+	ccd = newClientCallbackData(callback, ST(0), data);
+	RETVAL = UA_Client_readValueAttribute_async(client->cl_client,
+	    *nodeId, clientAsyncReadDataValueCallback, ccd, outoptReqId);
+	if (RETVAL != UA_STATUSCODE_GOOD)
+		deleteClientCallbackData(ccd);
+	if (outoptReqId != NULL)
+		XS_pack_UA_UInt32(SvRV(ST(4)), *outoptReqId);
+    OUTPUT:
+	RETVAL
+
+UA_StatusCode
 UA_Client_readValueAttribute(client, nodeId, outVariant)
 	OPCUA_Open62541_Client		client
 	OPCUA_Open62541_NodeId		nodeId
@@ -771,26 +771,6 @@ UA_Client_writeValueAttribute(client, nodeId, newVariant)
     CODE:
 	RETVAL = UA_Client_writeValueAttribute(client->cl_client,
 	    *nodeId, newVariant);
-    OUTPUT:
-	RETVAL
-
-UA_StatusCode
-UA_Client_readValueAttribute_async(client, nodeId, callback, data, outoptReqId)
-	OPCUA_Open62541_Client		client
-	OPCUA_Open62541_NodeId		nodeId
-	SV *				callback
-	SV *				data
-	OPCUA_Open62541_UInt32		outoptReqId
-    PREINIT:
-	ClientCallbackData		ccd;
-    CODE:
-	ccd = newClientCallbackData(callback, ST(0), data);
-	RETVAL = UA_Client_readValueAttribute_async(client->cl_client,
-	    *nodeId, clientAsyncReadVariantCallback, ccd, outoptReqId);
-	if (RETVAL != UA_STATUSCODE_GOOD)
-		deleteClientCallbackData(ccd);
-	if (outoptReqId != NULL)
-		XS_pack_UA_UInt32(SvRV(ST(4)), *outoptReqId);
     OUTPUT:
 	RETVAL
 

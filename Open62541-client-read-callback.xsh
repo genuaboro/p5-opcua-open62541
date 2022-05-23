@@ -167,20 +167,7 @@ clientAsyncReadUInt32Callback(UA_Client *client, void *userdata,
 	if (var != NULL)
 		XS_pack_UA_UInt32(sv, *var);
 
-	clientCallbackPerl(client, userdata, requestId, sv);
-}
-
-static void
-clientAsyncReadVariantCallback(UA_Client *client, void *userdata,
-    UA_UInt32 requestId, UA_Variant *var)
-{
-	dTHX;
-	SV *sv;
-
-	sv = newSV(0);
-	if (var != NULL)
-		XS_pack_UA_Variant(sv, *var);
-
+	/* XXX we do not propagate the status code */
 	clientCallbackPerl(client, userdata, requestId, sv);
 }
 
