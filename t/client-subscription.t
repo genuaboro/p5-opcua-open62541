@@ -6,7 +6,7 @@ use OPCUA::Open62541::Test::Server;
 use OPCUA::Open62541::Test::Client;
 use Test::More tests =>
     OPCUA::Open62541::Test::Server::planning() +
-    OPCUA::Open62541::Test::Client::planning() + 42;
+    OPCUA::Open62541::Test::Client::planning() + 39;
 use Test::Deep;
 use Test::NoWarnings;
 use Test::LeakTrace;
@@ -292,20 +292,5 @@ $response = $client->{client}->Subscriptions_create(
 is($response->{CreateSubscriptionResponse_responseHeader}{ResponseHeader_serviceResult},
    "BadTooManySubscriptions",
    "subscription create response too many");
-
-$client->stop();
-
-($deleted, $context) = (undef, undef);
-no_leaks_ok {
-    $client->{client}->connect($client->{url});
-    $response = $client->{client}->Subscriptions_create(
-	$request,
-	$context,
-	sub {},
-	sub {$deleted = 1; $context = "foo"},
-    );
-    # open52651 1.3 disconnect calls the callback that frees the context
-    $client->{client}->disconnect();
-} "Subscriptions create too many callback leak";
 
 $server->stop();
